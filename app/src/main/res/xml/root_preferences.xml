@@ -10,5 +10,16 @@
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
-
+    <PreferenceCategory
+        app:title="@string/theme_header">
+        <ListPreference
+            app:key="@string/settings_theme_key"
+            app:title="@string/settings_theme_title"
+            app:icon="@drawable/baseline_settings_brightness_24"
+            app:dialogTitle="@string/settings_theme_dialog_title"
+            app:useSimpleSummaryProvider="true"
+            app:entries="@array/settings_theme_entries"
+            app:entryValues="@array/settings_theme_values"
+            app:defaultValue="@string/settings_theme_default"/>
+    </PreferenceCategory>
 </PreferenceScreen>

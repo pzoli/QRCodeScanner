@@ -1,5 +1,4 @@
 <resources>
-    <!-- Reply Preference -->
     <string-array name="reply_entries">
         <item>Reply</item>
         <item>Reply to all</item>
@@ -9,4 +8,20 @@
         <item>reply</item>
         <item>reply_all</item>
     </string-array>
+
+    <string-array name="settings_theme_entries">
+        <item>Rendszer alapértelmezett</item>
+        <item>Világos</item>
+        <item>Sötét</item>
+    </string-array>
+
+    <string-array name="settings_theme_values">
+        <item>@string/settings_theme_value_default</item>
+        <item>@string/settings_theme_value_light</item>
+        <item>@string/settings_theme_value_dark</item>
+    </string-array>
+
+    <string name="settings_theme_value_default">DEFAULT</string>
+    <string name="settings_theme_value_light">LIGHT</string>
+    <string name="settings_theme_value_dark">DARK</string>
 </resources>

@@ -8,6 +8,8 @@
     android:orientation="vertical"
     tools:context="hu.infokristaly.forrasadmin.qrcodescanner.components.LoginActivity">
 
+    <include layout="@layout/appbar"/>
+
     <TextView
         android:id="@+id/tvUser"
         android:layout_width="match_parent"
@@ -29,29 +31,5 @@
         android:id="@+id/tvChoosedEvent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-
-    <Button
-        android:id="@+id/btnLoginWithQRCode"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Bejelentezés QR kóddal" />
-
-    <Button
-        android:id="@+id/btnChooseEvent"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Válassz egy foglalkozást" />
-
-    <Button
-        android:id="@+id/btnChooseClient"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Kliens hozzáadása" />
-
-    <Button
-        android:id="@+id/btnSettings"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Beállítások" />
 
 </LinearLayout>

@@ -5,5 +5,10 @@
     <!-- Messages Preferences -->
     <string name="server_title">Your server address</string>
     <string name="server_header">Server</string>
+    <string name="theme_header">Téma</string>
+    <string name="settings_theme_key">settings_theme</string>
+    <string name="settings_theme_title">Téma</string>
+    <string name="settings_theme_dialog_title">Téma</string>
+    <string name="settings_theme_default">DEFAULT</string>
 
 </resources>

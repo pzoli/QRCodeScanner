@@ -6,12 +6,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import hu.infokristaly.forrasadmin.qrcodescanner.R
@@ -31,6 +35,7 @@ class LoginActivity : AppCompatActivity() {
     private var qrcode: String? = null
     private val storedLoginItems = StoredLoginItems()
     private var serverAddress = ""
+    private var toolbar: Toolbar? = null
 
     val activitySettingsLauncher =
         registerForActivityResult<Intent, ActivityResult>(
@@ -233,29 +238,39 @@ class LoginActivity : AppCompatActivity() {
             storedLoginItems.restoreFromSharedPrefs(sharedPrefs)
         }
         updateView()
-        binding.btnLoginWithQRCode.setOnClickListener() { it: View ->
-            val intent = Intent(this, QRCodeScannerActivity::class.java)
-            activityLoginWithQRCodeLauncher.launch(intent)
-        }
 
-        binding.btnChooseEvent.setOnClickListener() { it: View ->
-            val intent = Intent(this, ChooseEventActivity::class.java)
-            intent.putExtra("events", SerializableEventMap(storedLoginItems.events))
-            activityChooseEventLauncher.launch(intent)
-        }
-
-        binding.btnChooseClient.setOnClickListener() { it: View ->
-            val intent = Intent(this, QRCodeScannerActivity::class.java)
-            activityAddClientWithQRCodeLauncher.launch(intent)
-        }
-
-        binding.btnSettings.setOnClickListener() {
-            val intent = Intent(this, SettingsActivity::class.java)
-            activitySettingsLauncher.launch(intent)
-        }
-
+        toolbar = findViewById(R.id.mytoolbar)
+        setSupportActionBar(toolbar)
         serverAddress = getServerAddress()
+    }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.appbar,menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId) {
+            R.id.m_login -> {
+                val intent = Intent(this, QRCodeScannerActivity::class.java)
+                activityLoginWithQRCodeLauncher.launch(intent)
+            }
+            R.id.m_choose_session -> {
+                val intent = Intent(this, ChooseEventActivity::class.java)
+                intent.putExtra("events", SerializableEventMap(storedLoginItems.events))
+                activityChooseEventLauncher.launch(intent)
+            }
+            R.id.m_add_client_to_session -> {
+                val intent = Intent(this, QRCodeScannerActivity::class.java)
+                activityAddClientWithQRCodeLauncher.launch(intent)
+            }
+            R.id.m_settings -> {
+                val intent = Intent(this, SettingsActivity::class.java)
+                activitySettingsLauncher.launch(intent)
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onPause() {

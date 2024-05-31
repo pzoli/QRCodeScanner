@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/m_login"
+        android:icon="@drawable/baseline_login_24"
+        android:title="Bejelentkezés"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/m_add_client_to_session"
+        android:icon="@drawable/baseline_account_circle_24"
+        android:title="Kliens hozzáadás"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/m_choose_session"
+        android:icon="@drawable/baseline_pending_actions_24"
+        android:title="Foglalkozás"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/m_settings"
+        android:title="Beállítások"
+        app:showAsAction="never" />
+
+</menu>
