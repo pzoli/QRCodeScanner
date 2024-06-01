@@ -44,7 +44,7 @@ class ChooseEventActivity : AppCompatActivity() {
                 events.clear()
                 events.putAll((eventsMap as SerializableEventMap).contentMap)
                 val eventsList = events.toList()
-                val adapter = MyListAdapter(this, eventsList)
+                val adapter = CustomIntStringPairAdapter(this, eventsList)
                 binding.lvEvents.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
                 binding.lvEvents.adapter = adapter
             }

@@ -4,12 +4,11 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.util.Log
 import android.view.Menu
-import android.view.MenuInflater
 import android.view.MenuItem
-import android.view.View
+import android.widget.AdapterView
+import android.widget.ListView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
@@ -36,6 +35,7 @@ class LoginActivity : AppCompatActivity() {
     private val storedLoginItems = StoredLoginItems()
     private var serverAddress = ""
     private var toolbar: Toolbar? = null
+    private var clientEMYSZ = ""
 
     val activitySettingsLauncher =
         registerForActivityResult<Intent, ActivityResult>(
@@ -43,7 +43,7 @@ class LoginActivity : AppCompatActivity() {
         ) { result: ActivityResult? ->
             serverAddress = getServerAddress()
         }
-                val activityLoginWithQRCodeLauncher =
+    val activityLoginWithQRCodeLauncher =
         registerForActivityResult<Intent, ActivityResult>(
             ActivityResultContracts.StartActivityForResult()
         ) { result: ActivityResult? ->
@@ -63,6 +63,9 @@ class LoginActivity : AppCompatActivity() {
                                 updateView()
                             }
                             downloadEvents()
+                            val intent = Intent(this, ChooseEventActivity::class.java)
+                            intent.putExtra("events", SerializableEventMap(storedLoginItems.events))
+                            activityChooseEventLauncher.launch(intent)
                         }
                     }
                 }
@@ -84,6 +87,7 @@ class LoginActivity : AppCompatActivity() {
                 Log.i("DEBUG", storedLoginItems.eventId.toString())
                 storedLoginItems.eventName =
                     storedLoginItems.events.get(storedLoginItems.eventId).toString()
+                downloadEventsClients()
                 updateView()
             }
         }
@@ -105,6 +109,8 @@ class LoginActivity : AppCompatActivity() {
                             val nameContent = parts[1].split(":");
                             if (nameContent.size == 2 && nameContent[0] == "NAME") {
                                 registerClientToEvent()
+                                downloadEventsClients()
+                                updateView()
                             }
                         }
                     }
@@ -125,6 +131,19 @@ class LoginActivity : AppCompatActivity() {
                 withContext(Dispatchers.IO) {
                     val result =
                         addClientToEventApiRequest(URL("http://$serverAddress/forras-admin/rest/addClientToEvent?pin=${storedLoginItems.pin}&eventid=${storedLoginItems.eventId}&clientid=${storedLoginItems.clientEMYSZ}"))
+                    return@withContext result
+                }
+            }
+            registerClientToEventResult = result.await()
+        }
+    }
+
+    private fun deleteClientFromEvent() {
+        runBlocking {
+            var result: Deferred<String> = async() {
+                withContext(Dispatchers.IO) {
+                    val result =
+                        addClientToEventApiRequest(URL("http://$serverAddress/forras-admin/rest/deleteClientFromEvent?pin=${storedLoginItems.pin}&eventid=${storedLoginItems.eventId}&clientid=${clientEMYSZ}"))
                     return@withContext result
                 }
             }
@@ -163,9 +182,47 @@ class LoginActivity : AppCompatActivity() {
             }
             storedLoginItems.events = result.await()
         }
-        val intent = Intent(this, ChooseEventActivity::class.java)
-        intent.putExtra("events", SerializableEventMap(storedLoginItems.events))
-        activityChooseEventLauncher.launch(intent)
+    }
+
+    private fun downloadEventsClients() {
+        runBlocking {
+            var result: Deferred<MutableMap<String, String>> = async() {
+                withContext(Dispatchers.IO) {
+                    val result =
+                        getEventClientsApiRequest(URL("http://$serverAddress/forras-admin/rest/getEventClients?eventId=${storedLoginItems.eventId}"))
+                    return@withContext result
+                }
+            }
+            storedLoginItems.clients = result.await()
+        }
+        updateView()
+    }
+
+    private fun getEventClientsApiRequest(url: URL): MutableMap<String, String> {
+        val result = mutableMapOf<String, String>()
+        try {
+            val conn = url.openConnection() as HttpURLConnection
+            with(conn) {
+                requestMethod = "GET"
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    inputStream.bufferedReader().use {
+                        it.lines().forEach { line ->
+                            val eventClientContent = line.split("\t")
+                            try {
+                                result.put(eventClientContent[0], eventClientContent[1]);
+                            } catch (e: Exception) {
+                                Log.e("ERROR", e.message.toString())
+                            }
+                        }
+                    }
+                } else {
+                    Log.e("ERROR", responseCode.toString() + ":" + responseMessage)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("Exception", e.toString())
+        }
+        return result;
     }
 
     fun getEventsApiRequest(url: URL): MutableMap<Int, String> {
@@ -181,13 +238,13 @@ class LoginActivity : AppCompatActivity() {
                             val eventContent = line.split("\t")
                             try {
                                 result.put(eventContent[0].toInt(), eventContent[1]);
-                            } catch (e:Exception) {
+                            } catch (e: Exception) {
                                 Log.e("ERROR", e.message.toString())
                             }
                         }
                     }
                 } else {
-                    Log.e("ERROR", responseCode.toString() +":"+ responseMessage)
+                    Log.e("ERROR", responseCode.toString() + ":" + responseMessage)
                 }
             }
         } catch (e: Exception) {
@@ -199,6 +256,10 @@ class LoginActivity : AppCompatActivity() {
     private fun updateView() {
         binding.tvChoosedEvent.text = storedLoginItems.eventName
         binding.tvLoggedInUser.text = storedLoginItems.systemUserName
+        val clientList = storedLoginItems.clients.toList()
+        val adapter = CustomStringStringPairAdapter(this, clientList)
+        binding.lvClients.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        binding.lvClients.adapter = adapter
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -215,8 +276,8 @@ class LoginActivity : AppCompatActivity() {
 
     private fun getServerAddress(): String {
         val prefFile = "${packageName}_preferences"
-        val sharedPreferences = getSharedPreferences(prefFile , Context.MODE_PRIVATE)
-        val result = sharedPreferences.getString("serveraddress", "")?:""
+        val sharedPreferences = getSharedPreferences(prefFile, Context.MODE_PRIVATE)
+        val result = sharedPreferences.getString("serveraddress", "") ?: ""
         return result
     }
 
@@ -231,43 +292,61 @@ class LoginActivity : AppCompatActivity() {
             insets
         }
 
+        serverAddress = getServerAddress()
+
         if (savedInstanceState != null) {
             storedLoginItems.restoreStateFromBundle(savedInstanceState)
         } else {
             val sharedPrefs = getSharedPreferences("my_activity_prefs", Context.MODE_PRIVATE)
             storedLoginItems.restoreFromSharedPrefs(sharedPrefs)
         }
+        downloadEventsClients()
         updateView()
+
+        binding.lvClients.onItemClickListener =
+            AdapterView.OnItemClickListener { parent, view, position, id ->
+                clientEMYSZ = storedLoginItems.clients.keys.toList().get(position)
+            }
 
         toolbar = findViewById(R.id.mytoolbar)
         setSupportActionBar(toolbar)
-        serverAddress = getServerAddress()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val inflater = menuInflater
-        inflater.inflate(R.menu.appbar,menu)
+        inflater.inflate(R.menu.appbar, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId) {
+        when (item.itemId) {
             R.id.m_login -> {
                 val intent = Intent(this, QRCodeScannerActivity::class.java)
                 activityLoginWithQRCodeLauncher.launch(intent)
             }
+
             R.id.m_choose_session -> {
                 val intent = Intent(this, ChooseEventActivity::class.java)
                 intent.putExtra("events", SerializableEventMap(storedLoginItems.events))
                 activityChooseEventLauncher.launch(intent)
             }
+
             R.id.m_add_client_to_session -> {
                 val intent = Intent(this, QRCodeScannerActivity::class.java)
                 activityAddClientWithQRCodeLauncher.launch(intent)
             }
+
             R.id.m_settings -> {
                 val intent = Intent(this, SettingsActivity::class.java)
                 activitySettingsLauncher.launch(intent)
+            }
+
+            R.id.m_delete_client -> {
+                if (clientEMYSZ != "") {
+                    deleteClientFromEvent()
+                    downloadEventsClients()
+                    updateView()
+                }
             }
         }
         return super.onOptionsItemSelected(item)

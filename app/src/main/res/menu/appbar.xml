@@ -14,6 +14,12 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/m_delete_client"
+        android:icon="@drawable/baseline_delete_forever_24"
+        android:title="Kliens törlése"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/m_choose_session"
         android:icon="@drawable/baseline_pending_actions_24"
         android:title="Foglalkozás"

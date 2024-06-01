@@ -8,6 +8,7 @@ import com.google.gson.Gson
 class StoredLoginItems {
 
 
+    lateinit var clients: MutableMap<String, String>
     var pin: String? = null
     var clientEMYSZ: String? = null
     var systemUserName: String = ""
