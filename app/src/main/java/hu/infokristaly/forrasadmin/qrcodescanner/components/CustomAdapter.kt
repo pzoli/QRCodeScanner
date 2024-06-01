@@ -18,7 +18,7 @@ class MyListAdapter(private val context: Context, private val data: List<Pair<In
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
         val view = convertView ?: LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_single_choice, parent, false)
         val (key, value) = data[position]
-        (view as TextView).text = "$key: $value"
+        (view as TextView).text = "$value"
         return view
     }
 }
